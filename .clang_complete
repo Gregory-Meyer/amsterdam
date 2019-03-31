@@ -1,8 +1,0 @@
--Iinclude
--pedantic
--std=c++17
--Wall
--Wcast-qual
--Wconversion
--Wextra
--Wshadow
