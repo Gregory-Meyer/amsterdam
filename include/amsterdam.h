@@ -57,11 +57,15 @@ class Channel;
 
 } // namespace detail
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 template <typename T>
 class Sender;
 
 template <typename T>
 class Receiver;
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 /** @returns An asynchronous sender/receiver pair. */
 template <typename T>
