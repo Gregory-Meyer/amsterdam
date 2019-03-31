@@ -23,6 +23,20 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+/**
+ *  @file amsterdam.h
+ *
+ *  Asynchronous channels for C++17.
+ *
+ *  Channels are manipulated through their Sender/Receiver components.
+ *  Each thread using a Channel should have a Sender and/or Receiver to
+ *  synchronize with other threads.
+ *
+ *  Channels are implemented as singly-linked lists, representing a
+ *  FIFO queue. Synchronization is achieved through a shared mutex and
+ *  condition variable.
+ */
+
 #ifndef AMSTERDAM_H
 #define AMSTERDAM_H
 
@@ -49,22 +63,65 @@ class Sender;
 template <typename T>
 class Receiver;
 
+/** @returns An asynchronous sender/receiver pair. */
 template <typename T>
 std::pair<Sender<T>, Receiver<T>> channel();
 
+/**
+ *  Sender half of an asynchronous MPMC FIFO queue.
+ *
+ *  Senders *can* be shared between threads, but each thread *should*
+ *  have its own Sender.
+ */
 template <typename T>
 class Sender {
 public:
+    /**
+     *  @returns A Sender that will transmit messages on the same
+     *           channel as other.
+     */
     Sender(const Sender &other) noexcept;
 
     ~Sender();
 
+    /**
+     *  @returns This Sender, which will now transmit messages on the
+     *           same channel as other.
+     */
     Sender& operator=(const Sender &other) noexcept;
 
+    /**
+     *  Copy constructs a message to send across this Sender's channel.
+     *
+     *  Messages are received in FIFO order (the order they were sent).
+     *
+     *  @throws SendError if all Receivers on this channel have been
+     *          destroyed.
+     *  @throws std::bad_alloc
+     */
     void push(const T &elem);
 
+    /**
+     *  Move constructs a message to send across this Sender's channel.
+     *
+     *  Messages are received in FIFO order (the order they were sent).
+     *
+     *  @throws SendError if all Receivers on this channel have been
+     *          destroyed.
+     *  @throws std::bad_alloc
+     */
     void push(T &&elem);
 
+    /**
+     *  Forwards all arguments to T's constructor, then sends that
+     *  message across this Sender's channel.
+     *
+     *  Messages are received in FIFO order (the order they were sent).
+     *
+     *  @throws SendError if all Receivers on this channel have been
+     *          destroyed.
+     *  @throws std::bad_alloc
+     */
     template <typename ...Ts, std::enable_if_t<std::is_constructible_v<T, Ts...>, int> = 0>
     void emplace(Ts &&...ts);
 
@@ -77,17 +134,51 @@ private:
     std::shared_ptr<detail::Channel<T>> channel_;
 };
 
+/**
+ *  Receiver half of an asynchronous MPMC FIFO queue.
+ *
+ *  Receivers *can* be shared between threads, but each thread *should*
+ *  have its own Receivers.
+ */
 template <typename T>
 class Receiver {
 public:
+    /**
+     *  @returns A Receiver that will listen for messages on the same
+     *           channel as other.
+     */
     Receiver(const Receiver &other) noexcept;
 
     ~Receiver();
 
+    /**
+     *  @returns This Receiver, which will now listen for messages on
+     *           the same channel as other.
+     */
     Receiver& operator=(const Receiver &other) noexcept;
 
+    /**
+     *  Polls this Receiver's channel for available messages, returning
+     *  it if one is available.
+     *
+     *  @returns The least-recently queued message sent on this
+     *           Receiver's channel, if there was one.
+     *
+     *  @throws RecvError if all Senders on this channel have been
+     *          destroyed.
+     */
     std::optional<T> try_pop();
 
+    /**
+     *  Blocks until a new message is available on this Receiver's
+     *  channel.
+     *
+     *  @returns The least-recently queued message sent on this
+     *           Receiver's channel.
+     *
+     *  @throws RecvError if all Senders on this channel have been
+     *          destroyed.
+     */
     T pop();
 
     template <typename U>
@@ -99,6 +190,7 @@ private:
     std::shared_ptr<detail::Channel<T>> channel_;
 };
 
+/** Thrown by Sender if all Receiver on the channel are destroyed. */
 class SendError : public std::exception {
 public:
     virtual ~SendError() = default;
@@ -108,6 +200,7 @@ public:
     }
 };
 
+/** Thrown by Receiver if all Senders on the channel are destroyed. */
 class RecvError : public std::exception {
 public:
     virtual ~RecvError() = default;
