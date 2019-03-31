@@ -1,6 +1,6 @@
 dist: xenial
 services: [docker]
-language: c++
+language: cpp
 env:
   - TEST_SUITE=release
   - TEST_SUITE=asan
