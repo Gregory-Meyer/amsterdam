@@ -23,7 +23,7 @@ jobs:
       script:
         - mkdir build
         - cd build
-        - cmake .. -DAMSTERDAM_BUILD_DOCS=ON
+        - cmake .. -DAMSTERDAM_BUILD_DOCS=ON -DAMSTERDAM_BUILD_TESTS=OFF
         - cmake --build . --target doc
         - cd ..
       env: TEST_SUITE=""
