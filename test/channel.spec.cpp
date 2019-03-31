@@ -1,4 +1,4 @@
-e#include <channel.h>
+#include <amsterdam.h>
 
 #include <cassert>
 #include <iostream>
@@ -10,65 +10,65 @@ e#include <channel.h>
 #include <catch2/catch.hpp>
 
 TEST_CASE("push/pop") {
-    auto [tx, rx] = chnl::channel<int>();
+    auto [tx, rx] = amst::channel<int>();
 
     tx.push(5);
     REQUIRE(rx.pop() == 5);
 }
 
 TEST_CASE("push/pop: shared tx") {
-    auto [tx, rx] = chnl::channel<int>();
-    const chnl::Sender<int> tx2 = tx;
+    auto [tx, rx] = amst::channel<int>();
+    const amst::Sender<int> tx2 = tx;
 
     tx.push(5);
     REQUIRE(rx.pop() == 5);
 }
 
 TEST_CASE("push/pop: shared rx") {
-    auto [tx, rx] = chnl::channel<int>();
-    const chnl::Receiver<int> rx2 = rx;
+    auto [tx, rx] = amst::channel<int>();
+    const amst::Receiver<int> rx2 = rx;
 
     tx.push(5);
     REQUIRE(rx.pop() == 5);
 }
 
 TEST_CASE("push/pop: shared tx/rx") {
-    auto [tx, rx] = chnl::channel<int>();
-    const chnl::Sender<int> tx2 = tx;
-    const chnl::Receiver<int> rx2 = rx;
+    auto [tx, rx] = amst::channel<int>();
+    const amst::Sender<int> tx2 = tx;
+    const amst::Receiver<int> rx2 = rx;
 
     tx.push(5);
     REQUIRE(rx.pop() == 5);
 }
 
 TEST_CASE("push: rx hung up") {
-    chnl::Sender<int> tx = chnl::channel<int>().first;
+    amst::Sender<int> tx = amst::channel<int>().first;
 
-    REQUIRE_THROWS_AS(tx.push(5), chnl::SendError);
+    REQUIRE_THROWS_AS(tx.push(5), amst::SendError);
 }
 
 TEST_CASE("push: rx hung up, shared tx") {
-    chnl::Sender<int> tx = chnl::channel<int>().first;
-    const chnl::Sender<int> tx2 = tx;
+    amst::Sender<int> tx = amst::channel<int>().first;
+    const amst::Sender<int> tx2 = tx;
 
-    REQUIRE_THROWS_AS(tx.push(5), chnl::SendError);
+    REQUIRE_THROWS_AS(tx.push(5), amst::SendError);
 }
 
 TEST_CASE("pop: tx hung up") {
-    chnl::Receiver<int> rx = chnl::channel<int>().second;
+    amst::Receiver<int> rx = amst::channel<int>().second;
 
-    REQUIRE_THROWS_AS(rx.pop(), chnl::RecvError);
+    REQUIRE_THROWS_AS(rx.pop(), amst::RecvError);
 }
 
 TEST_CASE("pop: tx hung up, shared rx") {
-    chnl::Receiver<int> rx = chnl::channel<int>().second;
-    const chnl::Receiver<int> rx2 = rx;
+    amst::Receiver<int> rx = amst::channel<int>().second;
+    const amst::Receiver<int> rx2 = rx;
 
-    REQUIRE_THROWS_AS(rx.pop(), chnl::RecvError);
+    REQUIRE_THROWS_AS(rx.pop(), amst::RecvError);
 }
 
 TEST_CASE("push/try_pop") {
-    auto [tx, rx] = chnl::channel<int>();
+    auto [tx, rx] = amst::channel<int>();
 
     tx.push(5);
     const auto received = rx.try_pop();
@@ -77,8 +77,8 @@ TEST_CASE("push/try_pop") {
 }
 
 TEST_CASE("push/try_pop: shared tx") {
-    auto [tx, rx] = chnl::channel<int>();
-    const chnl::Sender<int> tx2 = tx;
+    auto [tx, rx] = amst::channel<int>();
+    const amst::Sender<int> tx2 = tx;
 
     tx.push(5);
     const auto received = rx.try_pop();
@@ -87,8 +87,8 @@ TEST_CASE("push/try_pop: shared tx") {
 }
 
 TEST_CASE("push/try_pop: shared rx") {
-    auto [tx, rx] = chnl::channel<int>();
-    const chnl::Receiver<int> rx2 = rx;
+    auto [tx, rx] = amst::channel<int>();
+    const amst::Receiver<int> rx2 = rx;
 
     tx.push(5);
     const auto received = rx.try_pop();
@@ -97,9 +97,9 @@ TEST_CASE("push/try_pop: shared rx") {
 }
 
 TEST_CASE("push/try_pop: shared tx/rx") {
-    auto [tx, rx] = chnl::channel<int>();
-    const chnl::Sender<int> tx2 = tx;
-    const chnl::Receiver<int> rx2 = rx;
+    auto [tx, rx] = amst::channel<int>();
+    const amst::Sender<int> tx2 = tx;
+    const amst::Receiver<int> rx2 = rx;
 
     tx.push(5);
     const auto received = rx.try_pop();
@@ -108,26 +108,26 @@ TEST_CASE("push/try_pop: shared tx/rx") {
 }
 
 TEST_CASE("try_pop: empty") {
-    auto [tx, rx] = chnl::channel<int>();
+    auto [tx, rx] = amst::channel<int>();
 
     const auto received = rx.try_pop();
     REQUIRE(!received);
 }
 
 TEST_CASE("try_pop: tx hung up") {
-    chnl::Receiver<int> rx = chnl::channel<int>().second;
+    amst::Receiver<int> rx = amst::channel<int>().second;
 
-    REQUIRE_THROWS_AS(rx.try_pop(), chnl::RecvError);
+    REQUIRE_THROWS_AS(rx.try_pop(), amst::RecvError);
 }
 
 TEST_CASE("delete non-empty channel") {
-    auto [tx, rx] = chnl::channel<std::string>();
+    auto [tx, rx] = amst::channel<std::string>();
 
     tx.emplace("foo bar");
 }
 
 TEST_CASE("push/pop: fifo ordering") {
-    auto [tx, rx] = chnl::channel<int>();
+    auto [tx, rx] = amst::channel<int>();
 
     tx.push(5);
     tx.push(10);
@@ -137,7 +137,7 @@ TEST_CASE("push/pop: fifo ordering") {
 }
 
 TEST_CASE("push/pop: tx in another thread") {
-    auto [tx, rx] = chnl::channel<int>();
+    auto [tx, rx] = amst::channel<int>();
 
     std::thread([tx = tx]() mutable {
         tx.push(5);
@@ -147,7 +147,7 @@ TEST_CASE("push/pop: tx in another thread") {
 }
 
 TEST_CASE("stress") {
-    auto [tx, rx] = chnl::channel<int>();
+    auto [tx, rx] = amst::channel<int>();
 
     for (int i = 0; i < 1024; ++i) {
         tx.push(i);
@@ -159,7 +159,7 @@ TEST_CASE("stress") {
 }
 
 TEST_CASE("stress: multithreaded") {
-    auto [tx, rx] = chnl::channel<int>();
+    auto [tx, rx] = amst::channel<int>();
 
     std::thread t([tx = tx]() mutable {
         for (int i = 0; i < 1024; ++i) {
